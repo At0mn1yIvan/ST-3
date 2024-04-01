@@ -1,57 +1,53 @@
+// Copyright 2024 Khramov Ivan
 
 #include <stdexcept>
-#include <thread>
-#include <chrono>
+#include <thread> // NOLINT [build/c++11]
+#include <chrono> // NOLINT [build/c++11]
 
 #include "TimedDoor.h"
 
 DoorTimerAdapter::DoorTimerAdapter(TimedDoor & door_) : door(door_) {}
 
-void DoorTimerAdapter::Timeout()
-{
-    door.throwState();
+void DoorTimerAdapter::Timeout() {
+    if (door.isDoorOpened())
+        throw std::runtime_error("Time's up!");
+    return;
 }
 
-TimedDoor::TimedDoor(int timeout_) : iTimeout(timeout_), isOpened(false)
-{
+TimedDoor::TimedDoor(int timeout_) : iTimeout(timeout_), isOpened(false) {
     adapter = new DoorTimerAdapter(*this);
 }
 
-bool TimedDoor::isDoorOpened()
-{
+bool TimedDoor::isDoorOpened() {
     return isOpened;
 }
 
-void TimedDoor::unlock()
-{
+void TimedDoor::unlock() {
+    if (isOpened)
+        throw std::logic_error("Door is already opened");
     isOpened = true;
-    Timer timer;
-    timer.tregister(getTimeOut(), adapter);
 }
 
-void TimedDoor::lock()
-{
+void TimedDoor::lock() {
+    if (!isOpened)
+        throw std::logic_error("Door is already closed");
     isOpened = false;
 }
 
-int TimedDoor::getTimeOut() const
-{
+int TimedDoor::getTimeOut() const {
     return iTimeout;
 }
 
-void TimedDoor::throwState()
-{
-   if (isOpened) throw std::runtime_error("Time's up!");
-   else throw std::runtime_error("Door is closed!");
+void TimedDoor::throwState() {
+    adapter->Timeout();
 }
 
-void Timer::sleep(int time_)
-{
+void Timer::sleep(int time_) {
     std::this_thread::sleep_for(std::chrono::seconds(time_));
 }
 
-void Timer::tregister(int time_, TimerClient* client_)
-{
+void Timer::tregister(int time_, TimerClient* client_) {
+    this->client = client_;
     sleep(time_);
     client_->Timeout();
 }
