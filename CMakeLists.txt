@@ -4,6 +4,9 @@ project (ST-3)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -g")
 
+add_subdirectory(googletest)
+
+include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
 set(tool_dest "bin")
 set(lib_dest "lib")
